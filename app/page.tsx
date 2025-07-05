@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getStats } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { Footer } from "@/components/footer";
 
 /**
  * Page d'accueil - Landing page de la bibliothèque 2iE
@@ -641,25 +642,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer moderne */}
-      <footer className="bg-black text-white py-12">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-6 group cursor-pointer">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <BookOpen className="h-6 w-6 text-white" />
-              </div>
-              <div className="text-left">
-                <h3 className="text-xl font-bold group-hover:text-blue-400 transition-colors">Bibliothèque 2iE</h3>
-                <p className="text-sm text-gray-400">Institut International d'Ingénierie</p>
-              </div>
-            </div>
-            <p className="text-gray-400 mb-4">
-              © 2024 Institut International d'Ingénierie de l'Eau et de l'Environnement
-            </p>
-            <p className="text-gray-500 text-sm">Au service de l'excellence académique et de la recherche</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

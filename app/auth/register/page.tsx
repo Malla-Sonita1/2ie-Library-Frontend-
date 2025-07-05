@@ -8,51 +8,31 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BookOpen, Eye, EyeOff, Loader2 } from "lucide-react"
 
 /**
- * Page d'inscription
- * Fonctionnalités :
- * - Formulaire d'inscription avec validation
- * - Sélection du département
- * - Gestion des erreurs
- * - Redirection après inscription
+ * Page d'inscription (étudiants uniquement)
+ * Champs: name, email, password, confirmPassword
+ * Appel API: /api/students/register (POST)
  */
 export default function RegisterPage() {
   const { register } = useAuth()
   const router = useRouter()
   const [formData, setFormData] = useState<{
-    name: string
-    email: string
-    password: string
-    confirmPassword: string
-    studentId: string
-    department: string
-    // role: Role // supprimé, rôle fixé côté code
+    name: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
   }>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    studentId: "",
-    department: "",
-    // role: "student", // supprimé, rôle fixé côté code
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-
-  const departments = [
-    "Génie de l'Eau et de l'Environnement",
-    "Informatique et Télécommunications",
-    "Génie Civil et Hydraulique",
-    "Énergies Renouvelables",
-    "Génie Électrique",
-    "Management et Entrepreneuriat",
-    "Sciences Appliquées",
-  ]
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -83,16 +63,6 @@ export default function RegisterPage() {
       newErrors.confirmPassword = "Les mots de passe ne correspondent pas"
     }
 
-    if (!formData.studentId) {
-      newErrors.studentId = "Le numéro étudiant est requis"
-    } else if (!/^2IE\d{7}$/.test(formData.studentId)) {
-      newErrors.studentId = "Format invalide (ex: 2IE2024001)"
-    }
-
-    if (!formData.department) {
-      newErrors.department = "Veuillez sélectionner votre département"
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -102,17 +72,14 @@ export default function RegisterPage() {
     if (!validateForm()) return
     setLoading(true)
     try {
+      // Appel API d'inscription étudiant
       const success = await register({
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        studentId: formData.studentId,
-        department: formData.department,
-        role: "student", // rôle forcé côté frontend
       })
-
       if (success) {
-        router.push("/catalogue")
+        router.push("/auth/login")
       }
     } catch (error) {
       console.error("Erreur d'inscription:", error)
@@ -123,7 +90,6 @@ export default function RegisterPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-    // Effacer l'erreur du champ modifié
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
     }
@@ -142,7 +108,7 @@ export default function RegisterPage() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">Inscription</CardTitle>
-          <CardDescription>Créez votre compte pour accéder à la bibliothèque</CardDescription>
+          <CardDescription>Créez votre compte étudiant pour accéder à la bibliothèque</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -170,36 +136,6 @@ export default function RegisterPage() {
                 className={errors.email ? "border-red-500" : ""}
               />
               {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="studentId">Numéro étudiant</Label>
-              <Input
-                id="studentId"
-                type="text"
-                placeholder="2IE2024001"
-                value={formData.studentId}
-                onChange={(e) => handleInputChange("studentId", e.target.value)}
-                className={errors.studentId ? "border-red-500" : ""}
-              />
-              {errors.studentId && <p className="text-sm text-red-500">{errors.studentId}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="department">Département</Label>
-              <Select value={formData.department} onValueChange={(value) => handleInputChange("department", value)}>
-                <SelectTrigger className={errors.department ? "border-red-500" : ""}>
-                  <SelectValue placeholder="Sélectionnez votre département" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.department && <p className="text-sm text-red-500">{errors.department}</p>}
             </div>
 
             <div className="space-y-2">

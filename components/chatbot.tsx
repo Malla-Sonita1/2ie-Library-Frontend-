@@ -49,36 +49,68 @@ export function Chatbot() {
   const getAutomaticResponse = (userMessage: string): string => {
     const message = userMessage.toLowerCase()
 
+    // Emprunter un livre
     if (message.includes("emprunter") || message.includes("emprunt")) {
-      return "Pour emprunter un livre : 1) Connectez-vous à votre compte, 2) Recherchez le livre dans le catalogue, 3) Cliquez sur 'Réserver' si disponible. Vous pouvez emprunter jusqu'à 5 livres simultanément pour une durée de 2 semaines."
+      return "Pour emprunter un livre : 1) Connectez-vous à votre compte, 2) Si vous avez une réservation en tête de file et que le livre est disponible, cliquez sur 'Emprunter' dans 'Mes Réservations'. Sinon, vous devez d'abord réserver le livre. Un emprunt direct n'est possible que si vous êtes prioritaire sur une réservation disponible.";
     }
 
-    if (message.includes("horaire") || message.includes("heure")) {
-      return "La bibliothèque est ouverte du lundi au vendredi de 8h à 18h, et le samedi de 9h à 16h. Fermée le dimanche et jours fériés."
+    // Réserver un livre
+    if (message.includes("réserver") || message.includes("reservation") || message.includes("réservation")) {
+      return "Pour réserver un livre : 1) Connectez-vous à votre compte, 2) Cliquez sur 'Réserver' sur la fiche du livre, qu'il soit disponible ou non. Si le livre est déjà emprunté, vous serez placé en file d'attente et notifié par email dès qu'il sera disponible. Si le livre est disponible, vous pouvez le réserver pour plus tard (jusqu'à 2 semaines). Vous devrez ensuite venir l'emprunter depuis 'Mes Réservations'.";
     }
 
-    if (message.includes("renouveler") || message.includes("prolonger")) {
-      return "Vous pouvez renouveler vos emprunts depuis votre compte dans la section 'Mes Réservations', à condition qu'aucune réservation ne soit en attente sur le livre."
+    // Différence emprunt/réservation
+    if ((message.includes("différence") || message.includes("differe")) && (message.includes("emprunt") || message.includes("réserv"))) {
+      return "Réserver permet de garantir un livre pour plus tard ou d'être notifié dès qu'il redevient disponible (file d'attente). Emprunter signifie retirer physiquement un livre : cela n'est possible que si vous avez une réservation prioritaire et que le livre est disponible. Un livre réservé passe de 'Réservé' à 'Emprunté' dans votre compte lors du retrait.";
     }
 
-    if (message.includes("trouver") || message.includes("localiser") || message.includes("où")) {
-      return "Chaque livre a une cote indiquée dans sa fiche. Utilisez le plan de la bibliothèque disponible à l'accueil ou demandez de l'aide au personnel."
+    // Annuler une réservation
+    if (message.includes("annuler") && (message.includes("réserv") || message.includes("reservation"))) {
+      return "Pour annuler une réservation : 1) Connectez-vous à votre compte, 2) Rendez-vous dans 'Mes Réservations', 3) Cliquez sur 'Annuler' à côté de la réservation concernée.";
     }
 
+    // Voir mes emprunts/réservations
+    if ((message.includes("voir") || message.includes("mes") || message.includes("consulter")) && (message.includes("emprunt") || message.includes("réserv"))) {
+      return "Pour consulter vos emprunts ou réservations : 1) Connectez-vous à votre compte, 2) Accédez à la rubrique 'Mes Emprunts' ou 'Mes Réservations' dans le menu principal.";
+    }
+
+    // Livre non disponible
+    if ((message.includes("livre") && message.includes("pas disponible")) || (message.includes("livre") && message.includes("indisponible"))) {
+      return "Si un livre n'est pas disponible, vous pouvez le réserver. Vous serez averti dès qu'il sera disponible pour vous.";
+    }
+
+    // Combien de livres puis-je emprunter ?
+    if ((message.includes("combien") || message.includes("nombre")) && message.includes("emprunt")) {
+      return "Vous pouvez emprunter jusqu'à 5 livres simultanément pour une durée de 2 semaines chacun.";
+    }
+
+    // Retard / amende
     if (message.includes("retard") || message.includes("amende")) {
-      return "En cas de retard, une amende de 100 FCFA par jour et par livre s'applique. Vous pouvez consulter vos amendes dans votre compte."
+      return "En cas de retard, une amende de 100 FCFA par jour et par livre s'applique. Veillez à rendre vos livres à temps pour éviter toute pénalité.";
     }
 
+    // Renouveler un emprunt
+    if (message.includes("renouveler") || message.includes("prolonger")) {
+      return "Vous pouvez renouveler vos emprunts depuis votre compte dans la section 'Mes Emprunts', à condition qu'aucune réservation ne soit en attente sur le livre.";
+    }
+
+    // Où trouver un livre ?
+    if (message.includes("trouver") || message.includes("localiser") || message.includes("où")) {
+      return "Chaque livre a une cote indiquée dans sa fiche. Utilisez le plan de la bibliothèque disponible à l'accueil ou demandez de l'aide au personnel.";
+    }
+
+    // Inscription / compte
     if (message.includes("inscription") || message.includes("compte")) {
-      return "L'inscription est gratuite pour tous les étudiants et personnel de 2iE. Présentez-vous à l'accueil avec votre carte d'étudiant ou badge personnel."
+      return "L'inscription est gratuite pour tous les étudiants et le personnel de 2iE. Utilisez votre email institutionnel pour créer un compte.";
     }
 
+    // Contact / aide
     if (message.includes("contact") || message.includes("aide")) {
-      return "Vous pouvez nous contacter : 📧 bibliotheque@2ie.edu 📞 +226 25 49 28 00 📍 2iE Campus, Kamboinsé, Ouagadougou"
+      return "Vous pouvez nous contacter : 📧 bibliotheque@2ie.edu 📞 +226 25 49 28 00 📍 2iE Campus, Kamboinsé, Ouagadougou";
     }
 
     // Réponse par défaut
-    return "Je ne suis pas sûr de comprendre votre question. Pouvez-vous la reformuler ? Ou contactez directement le personnel de la bibliothèque pour une assistance personnalisée."
+    return "Je ne suis pas sûr de comprendre votre question. Pouvez-vous la reformuler ? Ou contactez directement le personnel de la bibliothèque pour une assistance personnalisée.";
   }
 
   const handleSendMessage = async () => {

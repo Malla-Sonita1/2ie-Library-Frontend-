@@ -66,6 +66,40 @@ export function MonCompteContent() {
     setLoading(false);
   }
 
+  async function handleCancel(reservationId: number) {
+    setLoading(true);
+    setMessage("");
+    try {
+      const res = await import("@/lib/api").then(m => m.cancelReservation(reservationId));
+      if (res.success) {
+        setMessage("Réservation annulée.");
+        setReservations(prev => prev.filter(r => r.id !== reservationId));
+      } else {
+        setMessage(res.message || "Erreur lors de l'annulation.");
+      }
+    } catch {
+      setMessage("Erreur lors de l'annulation.");
+    }
+    setLoading(false);
+  }
+
+  async function handleFulfill(reservationId: number) {
+    setLoading(true);
+    setMessage("");
+    try {
+      const res = await import("@/lib/api").then(m => m.fulfillReservation(reservationId));
+      if (res.success) {
+        setMessage("Réservation honorée, emprunt créé.");
+        setReservations(prev => prev.map(r => r.id === reservationId ? { ...r, status: "honoree" } : r));
+      } else {
+        setMessage(res.message || "Erreur lors de l'emprunt.");
+      }
+    } catch {
+      setMessage("Erreur lors de l'emprunt.");
+    }
+    setLoading(false);
+  }
+
   return (
     <div className="py-8 px-4 md:px-8">
       <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-2ie-blue">Mes emprunts actifs</h2>
@@ -107,6 +141,15 @@ export function MonCompteContent() {
                 <div><b>Date de réservation :</b> {res.reservation_date ? new Date(res.reservation_date).toLocaleDateString() : "-"}</div>
                 <div><b>Statut :</b> <span className="text-blue-700 font-semibold">{res.status}</span></div>
                 <div><b>Position dans la file :</b> {res.queue_position}</div>
+              </div>
+              <div className="flex gap-2 mt-2 md:mt-0">
+                {res.status === "en_attente" && (
+                  <>
+                    <button className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50" onClick={() => handleCancel(res.id)} disabled={loading}>Annuler</button>
+                    {res.bookAvailable && <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50" onClick={() => handleFulfill(res.id)} disabled={loading}>Emprunter</button>}
+                  </>
+                )}
+                {res.status === "honoree" && <span className="text-green-700">Emprunté</span>}
               </div>
             </li>
           ))}

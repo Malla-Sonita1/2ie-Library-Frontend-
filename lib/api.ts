@@ -136,11 +136,11 @@ export async function deleteBook(id: number) {
   return await res.json();
 }
 
-export async function reserveBook(bookId: number, dueDate: string) {
-  const res = await apiFetch("/loans", {
+export async function reserveBook(bookId: number, reservationDate: string) {
+  const res = await apiFetch("/reservations", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ bookId, dueDate }),
+    body: JSON.stringify({ bookId, reservationDate }),
   }, true);
   return await res.json();
 }
@@ -333,5 +333,15 @@ export async function returnLoan(loanId: number, isAdmin = false) {
   const endpoint = isAdmin ? `/loans/${loanId}/admin-return` : `/loans/${loanId}/return`;
   const res = await apiFetch(endpoint, { method: "POST" }, true);
   if (!res.ok) throw new Error("Erreur lors du retour du livre");
+  return await res.json();
+}
+
+// Emprunter un livre directement (si disponible)
+export async function borrowBook(bookId: number, dueDate: string) {
+  const res = await apiFetch("/loans", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bookId, dueDate }),
+  }, true);
   return await res.json();
 }

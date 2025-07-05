@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
+import { getUserReservationsHistory } from "@/lib/api"
 import {
   User,
   BookOpen,
@@ -61,6 +62,8 @@ export function MonCompteContent() {
     status: string;
     pickupDeadline?: string;
     estimatedAvailability?: string;
+    isFirstInQueue?: boolean;
+    position?: number | null; // Ajout explicite pour la compatibilité
   };
   type FavoriteBook = {
     id: number;
@@ -72,6 +75,8 @@ export function MonCompteContent() {
   const [borrowHistory, setBorrowHistory] = useState<Borrow[]>([]);
   const [currentReservations, setCurrentReservations] = useState<Reservation[]>([]);
   const [favoriteBooks, setFavoriteBooks] = useState<FavoriteBook[]>([])
+  const [reservationHistory, setReservationHistory] = useState<Reservation[]>([]);
+  const [reservationMessage, setReservationMessage] = useState<string | null>(null);
 
   // Chargement des données utilisateur
   useEffect(() => {
@@ -124,6 +129,7 @@ export function MonCompteContent() {
           reservationDate: "2024-04-10",
           status: "ready",
           pickupDeadline: "2024-04-15",
+          isFirstInQueue: true,
         },
         {
           id: 2,
@@ -132,6 +138,7 @@ export function MonCompteContent() {
           reservationDate: "2024-04-12",
           status: "waiting",
           estimatedAvailability: "2024-04-20",
+          isFirstInQueue: false,
         },
       ]
 
@@ -153,13 +160,32 @@ export function MonCompteContent() {
         },
       ]
 
+      // Ajout de l'historique des réservations (à remplacer par appel API réel)
+      const mockReservationHistory = [
+        ...mockReservations,
+        { id: 3, title: "Livre annulé", author: "Auteur X", reservationDate: "2024-04-01", status: "annulé" }
+      ];
+
       setStats(mockStats)
       setBorrowHistory(mockHistory)
       setCurrentReservations(mockReservations)
       setFavoriteBooks(mockFavorites)
-    }
+      setReservationHistory(mockReservationHistory);
 
-    loadUserData()
+      // Chargement de l'historique réel des réservations
+      try {
+        const history = await getUserReservationsHistory();
+        // Mapping explicite : queue_position -> position
+        const mappedHistory = history.map((r: any) => ({
+          ...r,
+          position: r.queue_position ?? r.position ?? null,
+        }));
+        setReservationHistory(mappedHistory);
+      } catch (e) {
+        setReservationHistory([]);
+      }
+    };
+    loadUserData();
   }, [])
 
   const handleSaveProfile = async () => {
@@ -186,18 +212,36 @@ export function MonCompteContent() {
   const handleCancelReservation = async (reservationId: number) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500))
-
       setCurrentReservations((prev) => prev.filter((r) => r.id !== reservationId))
       setStats((prev) => ({ ...prev, reservations: prev.reservations - 1 }))
-
-      toast({
-        title: "Réservation annulée",
-        description: "La réservation a été annulée avec succès.",
-      })
+      setReservationMessage("Réservation annulée avec succès.");
+      // Rafraîchir l'historique réel après annulation
+      try {
+        const history = await getUserReservationsHistory();
+        setReservationHistory(history);
+      } catch (e) {}
+      setTimeout(() => setReservationMessage(null), 3000);
     } catch (error) {
       toast({
         title: "Erreur",
         description: "Impossible d'annuler la réservation.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleBorrowReservation = async (reservationId: number) => {
+    try {
+      // Appel API pour transformer la réservation en emprunt (à adapter avec l'API réelle)
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setCurrentReservations((prev) => prev.filter((r) => r.id !== reservationId))
+      setStats((prev) => ({ ...prev, reservations: prev.reservations - 1 }))
+      setReservationMessage("Livre emprunté avec succès.");
+      setTimeout(() => setReservationMessage(null), 3000);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'emprunter le livre.",
         variant: "destructive",
       })
     }
@@ -215,6 +259,8 @@ export function MonCompteContent() {
         return <Badge className="bg-green-500">Prêt</Badge>
       case "waiting":
         return <Badge className="bg-yellow-500">En attente</Badge>
+      case "annulé":
+        return <Badge className="bg-red-500">Annulé</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
     }
@@ -451,12 +497,8 @@ export function MonCompteContent() {
                           {getStatusBadge(borrow.status)}
                           {borrow.rating && (
                             <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-4 w-4 ${borrow.rating !== undefined && i < borrow.rating ? "text-yellow-400 fill-current" : "text-gray-300"}`}
-                                />
-                              ))}
+                              <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
+                              <span className="text-sm">{borrow.rating}</span>
                             </div>
                           )}
                         </div>
@@ -464,6 +506,44 @@ export function MonCompteContent() {
                     </CardContent>
                   </Card>
                 ))}
+                {/* Historique des réservations annulées ou passées */}
+                {reservationHistory.length > 0 && (
+                  <div className="mt-8">
+                    <h4 className="font-semibold text-lg mb-2">Historique des Réservations</h4>
+                    {reservationHistory
+                      // Affiche toutes les réservations qui ne sont PAS actives (ni en attente, ni prêtes)
+                      .filter((reservation: Reservation) =>
+                        reservation.status !== "waiting" &&
+                        reservation.status !== "en_attente" &&
+                        reservation.status !== "ready" &&
+                        reservation.status !== "prêt" &&
+                        reservation.status !== "disponible"
+                      )
+                      .map((reservation: Reservation) => (
+                        <Card key={reservation.id} className="border-l-4 border-l-yellow-500">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-lg">{reservation.title}</h4>
+                                <p className="text-muted-foreground mb-2">par {reservation.author}</p>
+                                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                                  <div className="flex items-center">
+                                    <Calendar className="h-4 w-4 mr-1" />
+                                    Réservé le {new Date(reservation.reservationDate).toLocaleDateString("fr-FR")}
+                                  </div>
+                                  {/* Affichage debug du statut */}
+                                  <div className="ml-2 text-xs text-gray-400">Statut: {reservation.status}</div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end space-y-2">
+                                {getStatusBadge(reservation.status)}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -480,6 +560,9 @@ export function MonCompteContent() {
               <CardDescription>Gérez vos réservations en cours</CardDescription>
             </CardHeader>
             <CardContent>
+              {reservationMessage && (
+                <div className="mb-4 text-green-600 font-semibold text-center">{reservationMessage}</div>
+              )}
               <div className="space-y-4">
                 {currentReservations.map((reservation: Reservation) => (
                   <Card key={reservation.id} className="border-l-4 border-l-yellow-500">
@@ -508,10 +591,25 @@ export function MonCompteContent() {
                         </div>
                         <div className="flex flex-col items-end space-y-2">
                           {getStatusBadge(reservation.status)}
-                          <Button variant="outline" size="sm" onClick={() => handleCancelReservation(reservation.id)}>
-                            <X className="h-4 w-4 mr-1" />
-                            Annuler
-                          </Button>
+                          <div className="flex flex-row gap-2">
+                            {/* Bouton Emprunter si le livre est prêt ou si l'utilisateur est en tête de file et le livre est dispo */}
+                            {(
+                              reservation.status === "ready" ||
+                              reservation.status === "prêt" ||
+                              reservation.status === "disponible" ||
+                              ((reservation.status === "waiting" || reservation.status === "en_attente") &&
+                                (reservation.position === 1 || reservation.isFirstInQueue))
+                            ) && (
+                              <Button variant="default" size="sm" onClick={() => handleBorrowReservation(reservation.id)}>
+                                <BookOpen className="h-4 w-4 mr-1" />
+                                Emprunter
+                              </Button>
+                            )}
+                            <Button variant="outline" size="sm" onClick={() => handleCancelReservation(reservation.id)}>
+                              <X className="h-4 w-4 mr-1" />
+                              Annuler
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </CardContent>

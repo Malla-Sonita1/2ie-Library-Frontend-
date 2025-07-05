@@ -2,7 +2,7 @@
 
 Une application web moderne et interactive pour la gestion de bibliothèque universitaire, développée avec Next.js, React, TypeScript, Tailwind CSS (Frontend) et Node.js/Express, MySQL (Backend).
 
-## 🚀 Fonctionnalités
+##  Fonctionnalités
 
 ### Interface Étudiante
 - **Authentification** : Inscription, connexion sécurisée JWT, gestion du token
@@ -25,7 +25,7 @@ Une application web moderne et interactive pour la gestion de bibliothèque univ
 - **Chatbot** : Assistant virtuel
 - **Accessibilité** : ARIA, navigation clavier
 
-## 🛠️ Technologies Utilisées
+##  Technologies Utilisées
 - **Frontend** : Next.js 14, React 18, TypeScript, Tailwind CSS, shadcn/ui
 - **Backend** : Node.js, Express, MySQL
 - **Authentification** : JWT
@@ -33,13 +33,13 @@ Une application web moderne et interactive pour la gestion de bibliothèque univ
 - **Animations** : Tailwind CSS
 - **Icons** : Lucide React
 
-## 📦 Installation
+##  Installation
 
 ### Frontend
 ```bash
 cd Frontend
-pnpm install # ou npm install / yarn install
-pnpm dev # ou npm run dev / yarn dev
+npm install # ou  yarn install / pnpm install
+npm run dev # ou  yarn dev / pnpm dev
 ```
 
 ### Backend
@@ -49,7 +49,7 @@ npm install
 npm run dev # ou npm start
 ```
 
-## 🔧 Configuration
+##  Configuration
 
 ### Frontend
 - Variables d'environnement dans `.env.local` (voir exemple dans README Frontend)
@@ -58,7 +58,7 @@ npm run dev # ou npm start
 - Variables d'environnement dans `.env` (voir `.env.example`)
 - Importer la base de données avec `database.sql` et `admin-data.sql`
 
-## 🌐 Structure du Projet
+##  Structure du Projet
 
 ```
 Projet/
@@ -114,25 +114,9 @@ Projet/
 │   └── ...
 ```
 
-## 🧪 Comptes de Test
-
-### Étudiant
-```json
-{
-  "email": "aminata.ouedraogo@2ie.edu",
-  "password": "password123"
-}
 ```
 
-### Administrateur
-```json
-{
-  "email": "ibrahim.sawadogo@2ie.edu",
-  "password": "password123"
-}
-```
-
-## 🚀 Déploiement
+##  Déploiement
 
 ### Vercel (Frontend)
 - Connecter le repo, configurer les variables d'environnement, déployer
@@ -143,11 +127,56 @@ docker build -t 2ie-library-backend .
 docker run -p 3001:3000 2ie-library-backend
 ```
 
-## 🤝 Contribution
+##  Contribution
 - Fork, branche, PR, review (voir README d'origine)
 
-## 📄 Licence
+##  Licence
 MIT
+
+## Tester le projet (Procédure pour l'évaluateur)
+
+### 1. Préparer le Backend
+- Suivre les instructions du README du dossier Backend pour créer la base de données, les tables, et importer les données (admins, livres, etc.).
+- S'assurer que le backend fonctionne sur `http://localhost:3001` (ou le port défini dans `.env`).
+
+### 2. Préparer le Frontend
+1. Installer les dépendances :
+   ```bash
+   pnpm install # ou npm install / yarn install
+   ```
+2. Configurer le fichier `.env.local` à la racine du dossier Frontend :
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:3001/api
+   NEXT_PUBLIC_APP_NAME=2iE Library
+   NEXT_PUBLIC_APP_VERSION=1.0.0
+   ```
+   > Adapter l'URL si le backend tourne sur un autre port.
+3. Lancer le serveur de développement :
+   ```bash
+   pnpm dev # ou npm run dev / yarn dev
+   ```
+4. Accéder à l'application sur [http://localhost:3000](http://localhost:3000)
+
+### 3. Tester les fonctionnalités
+- **Inscription/Connexion** : Créer un compte étudiant ou utiliser un compte admin existant.
+- **Catalogue** : Parcourir, rechercher, filtrer les livres.
+- **Réservations** : Réserver un livre, voir l'historique, annuler.
+- **Gestion admin** : Se connecter en tant qu'admin, accéder au dashboard, gérer livres et utilisateurs.
+- **Commentaires/Évaluations** : Ajouter des avis sur les livres.
+- **Notifications** : Vérifier la réception des alertes (retards, rappels).
+- **Chatbot** : Tester l'assistant virtuel.
+
+### 4. Données de test
+- Utiliser les comptes fournis dans le README (admin et étudiant) ou en créer de nouveaux.
+- Les livres et admins sont déjà présents si les scripts d'import ont été suivis.
+
+### 5. Conseils
+- Si une fonctionnalité ne marche pas, vérifier la console du navigateur et du backend pour les erreurs.
+- S'assurer que le backend est bien démarré avant le frontend.
+- Adapter les variables d'environnement si besoin.
+
+---
+**Votre projet est prêt à être testé dans les conditions réelles d'une soutenance ou d'une évaluation.**
 
 ---
 **2iE Library** - Bibliothèque Innovante pour l'Excellence Académique

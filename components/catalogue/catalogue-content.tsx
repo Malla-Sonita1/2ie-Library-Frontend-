@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
 import { Search, BookOpen, Clock, Heart, Eye, Grid3X3, List } from "lucide-react"
 import { BookRatingComments } from "@/components/BookRatingComments"
+import { borrowBook, reserveBook } from "@/lib/api"
 
 // Définition du type Book
 interface Book {
@@ -96,33 +97,6 @@ export function CatalogueContent({ books, loading }: CatalogueContentProps) {
   // Ajoute la durée maximale d'emprunt/réservation (2 semaines)
   const MAX_DURATION_DAYS = 14;
 
-  // Nouvelle fonction pour emprunter un livre
-  const handleBorrowBook = async (bookId: number) => {
-    try {
-      const today = new Date();
-      const dueDate = new Date(today.getTime() + MAX_DURATION_DAYS * 24 * 60 * 60 * 1000);
-      const res = await import("@/lib/api").then(m => m.reserveBook(bookId, dueDate.toISOString().slice(0, 10)));
-      if (res && res.success !== false) {
-        toast({
-          title: "Emprunt confirmé",
-          description: `Le livre a été emprunté jusqu'au ${dueDate.toLocaleDateString("fr-FR")}.`,
-        });
-      } else {
-        toast({
-          title: "Erreur emprunt",
-          description: res?.message || "Impossible d'emprunter ce livre.",
-          variant: "destructive",
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error?.message || "Impossible d'emprunter ce livre pour le moment.",
-        variant: "destructive",
-      });
-    }
-  };
-
   // Nouvelle fonction pour réserver un livre (toujours possible)
   const handleReserveBook = async (bookId: number) => {
     try {
@@ -145,6 +119,32 @@ export function CatalogueContent({ books, loading }: CatalogueContentProps) {
       toast({
         title: "Erreur",
         description: error?.message || "Impossible de réserver ce livre pour le moment.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBorrowBook = async (bookId: number) => {
+    try {
+      const today = new Date();
+      const dueDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000); // 2 semaines
+      const res = await borrowBook(bookId, dueDate.toISOString().slice(0, 10));
+      if (res && res.success !== false) {
+        toast({
+          title: "Emprunt confirmé",
+          description: `Le livre a été emprunté jusqu'au ${dueDate.toLocaleDateString("fr-FR")}.`,
+        });
+      } else {
+        toast({
+          title: "Erreur emprunt",
+          description: res?.message || "Impossible d'emprunter ce livre.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error?.message || "Impossible d'emprunter ce livre pour le moment.",
         variant: "destructive",
       });
     }
@@ -364,21 +364,19 @@ export function CatalogueContent({ books, loading }: CatalogueContentProps) {
                 <div className="flex space-x-2 w-full">
                   <Button
                     className="flex-1"
-                    variant={book.available ? "default" : "secondary"}
-                    disabled={!book.available}
-                    onClick={() => handleBorrowBook(book.id)}
-                  >
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Emprunter
-                    <span className="ml-2 text-xs text-muted-foreground">(max 2 semaines)</span>
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    variant="outline"
+                    variant="default"
                     onClick={() => handleReserveBook(book.id)}
                   >
                     <Clock className="h-4 w-4 mr-2" />
                     Réserver
+                    <span className="ml-2 text-xs text-muted-foreground">(max 2 semaines)</span>
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    disabled={!book.available}
+                    onClick={() => handleBorrowBook(book.id)}
+                  >
+                    Emprunter
                     <span className="ml-2 text-xs text-muted-foreground">(max 2 semaines)</span>
                   </Button>
                   <Button variant="outline" size="icon">
@@ -433,11 +431,18 @@ export function CatalogueContent({ books, loading }: CatalogueContentProps) {
 
                       <div className="flex space-x-2">
                         <Button
-                          variant={book.available ? "default" : "secondary"}
-                          disabled={!book.available}
+                          variant="default"
                           onClick={() => handleReserveBook(book.id)}
                         >
-                          {book.available ? "Réserver" : "Non disponible"}
+                          Réserver
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          disabled={!book.available}
+                          onClick={() => handleBorrowBook(book.id)}
+                        >
+                          Emprunter
+                          <span className="ml-2 text-xs text-muted-foreground">(max 2 semaines)</span>
                         </Button>
                         <Button variant="outline" size="icon">
                           <Eye className="h-4 w-4" />

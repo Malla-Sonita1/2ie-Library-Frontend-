@@ -59,7 +59,7 @@ export function Sidebar() {
   // Fonction pour vérifier si un lien est actif
   const isActiveLink = (href: string) => {
     if (href === "/") return pathname === "/"
-    return pathname.startsWith(href)
+    return pathname?.startsWith(href) ?? false
   }
 
   return (
